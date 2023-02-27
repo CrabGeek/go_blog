@@ -35,7 +35,17 @@ func articlesIndexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func articlesStoreHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "创建新的文章")
+	err := r.ParseForm()
+	if err != nil {
+		// 解析错误，这里应该有错误处理
+		fmt.Fprint(w, "请提供正确的数据！")
+		return
+	}
+
+	fmt.Fprintf(w, "r.Form 中 title的值为: %v <br>", r.FormValue("title"))
+	fmt.Fprintf(w, "r.PostForm 中 title的值为: %v <br>", r.PostFormValue("title"))
+	fmt.Fprintf(w, "f.Form 中 test 的值为: %v <br>", r.FormValue("test"))
+	fmt.Fprintf(w, "r.PostForm 中 test的值为: %v <br>", r.PostFormValue("test"))
 }
 
 // 中间件
@@ -64,7 +74,7 @@ func articleCreateHandler(w http.ResponseWriter, r *http.Request) {
 			<title>创建文章 —— 我的技术博客</title>
 	</head>
 	<body>
-			<form action="%s" method="post">
+			<form action="%s?test=data" method="post">
 					<p><input type="text" name="title"></p>
 					<p><textarea name="body" cols="30" rows="10"></textarea></p>
 					<p><button type="submit">提交</button></p>
@@ -73,7 +83,7 @@ func articleCreateHandler(w http.ResponseWriter, r *http.Request) {
 	</html>
 	`
 	storeURL, _ := route.Get("articles.store").URL()
-	fmt.Fprint(w, html, storeURL)
+	fmt.Fprintf(w, html, storeURL)
 }
 
 func main() {
