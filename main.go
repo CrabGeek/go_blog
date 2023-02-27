@@ -8,6 +8,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
+var route = mux.NewRouter()
+
 func defaultHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "<h1>Hello, 欢迎来到 goblog! </h1>")
 }
@@ -54,9 +56,28 @@ func removeTrailingSlash(next http.Handler) http.Handler {
 	})
 }
 
+func articleCreateHandler(w http.ResponseWriter, r *http.Request) {
+	html := `
+  <!DOCTYPE html>
+	<html lang="en">
+	<head>
+			<title>创建文章 —— 我的技术博客</title>
+	</head>
+	<body>
+			<form action="%s" method="post">
+					<p><input type="text" name="title"></p>
+					<p><textarea name="body" cols="30" rows="10"></textarea></p>
+					<p><button type="submit">提交</button></p>
+			</form>
+	</body>
+	</html>
+	`
+	storeURL, _ := route.Get("articles.store").URL()
+	fmt.Fprint(w, html, storeURL)
+}
+
 func main() {
 	// route := http.NewServeMux()
-	route := mux.NewRouter()
 
 	route.HandleFunc("/", defaultHandlerFunc).Methods("GET").Name("home")
 	route.HandleFunc("/about", aboutHandler).Methods("GET").Name("about")
@@ -64,17 +85,12 @@ func main() {
 	route.HandleFunc("/articles/{id:[0-9]+}", articleShowHandler).Methods("GET").Name("articles.show")
 	route.HandleFunc("/articles", articlesIndexHandler).Methods("GET").Name("articles.index")
 	route.HandleFunc("/articles", articlesStoreHandler).Methods("POST").Name("articles.store")
+	route.HandleFunc("/articles/create", articleCreateHandler).Methods("GET").Name("articles.create")
 
 	route.NotFoundHandler = http.HandlerFunc(notFoundHandler)
 
 	// 使用中间件
 	route.Use(forceHTMLMiddleware)
-
-	homeURL, _ := route.Get("home").URL()
-	fmt.Println("homeURL: ", homeURL)
-
-	articleURL, _ := route.Get("articles.show").URL("id", "23")
-	fmt.Println("articleURL: ", articleURL)
 
 	http.ListenAndServe(":3000", removeTrailingSlash(route))
 }
